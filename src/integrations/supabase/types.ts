@@ -14,7 +14,84 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      analyses: {
+        Row: {
+          created_at: string
+          defects: string[]
+          grade: string
+          id: string
+          image_path: string | null
+          produce_name: string
+          recommendation: string | null
+          score: number | null
+          summary: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          defects?: string[]
+          grade: string
+          id?: string
+          image_path?: string | null
+          produce_name?: string
+          recommendation?: string | null
+          score?: number | null
+          summary?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          defects?: string[]
+          grade?: string
+          id?: string
+          image_path?: string | null
+          produce_name?: string
+          recommendation?: string | null
+          score?: number | null
+          summary?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          district: string | null
+          farmer_id: string | null
+          full_name: string | null
+          id: string
+          language: string
+          mobile: string | null
+          state: string | null
+          updated_at: string
+          village: string | null
+        }
+        Insert: {
+          created_at?: string
+          district?: string | null
+          farmer_id?: string | null
+          full_name?: string | null
+          id: string
+          language?: string
+          mobile?: string | null
+          state?: string | null
+          updated_at?: string
+          village?: string | null
+        }
+        Update: {
+          created_at?: string
+          district?: string | null
+          farmer_id?: string | null
+          full_name?: string | null
+          id?: string
+          language?: string
+          mobile?: string | null
+          state?: string | null
+          updated_at?: string
+          village?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
