@@ -18,6 +18,7 @@ import { Route as AuthenticatedDashboardRouteImport } from './routes/_authentica
 import { Route as AuthenticatedHistoryRouteImport } from './routes/_authenticated/history'
 import { Route as AuthenticatedMarketplaceRouteImport } from './routes/_authenticated/marketplace'
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
+import { Route as ApiGradeRouteImport } from './routes/api/grade'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -64,6 +65,11 @@ const AuthenticatedProfileRoute = AuthenticatedProfileRouteImport.update({
   path: '/profile',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const ApiGradeRoute = ApiGradeRouteImport.update({
+  id: '/api/grade',
+  path: '/api/grade',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -74,6 +80,7 @@ export interface FileRoutesByFullPath {
   '/history': typeof AuthenticatedHistoryRoute
   '/marketplace': typeof AuthenticatedMarketplaceRoute
   '/profile': typeof AuthenticatedProfileRoute
+  '/api/grade': typeof ApiGradeRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -84,6 +91,7 @@ export interface FileRoutesByTo {
   '/history': typeof AuthenticatedHistoryRoute
   '/marketplace': typeof AuthenticatedMarketplaceRoute
   '/profile': typeof AuthenticatedProfileRoute
+  '/api/grade': typeof ApiGradeRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -96,6 +104,7 @@ export interface FileRoutesById {
   '/_authenticated/history': typeof AuthenticatedHistoryRoute
   '/_authenticated/marketplace': typeof AuthenticatedMarketplaceRoute
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
+  '/api/grade': typeof ApiGradeRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -108,6 +117,7 @@ export interface FileRouteTypes {
     | '/history'
     | '/marketplace'
     | '/profile'
+    | '/api/grade'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -118,6 +128,7 @@ export interface FileRouteTypes {
     | '/history'
     | '/marketplace'
     | '/profile'
+    | '/api/grade'
   id:
     | '__root__'
     | '/'
@@ -129,6 +140,7 @@ export interface FileRouteTypes {
     | '/_authenticated/history'
     | '/_authenticated/marketplace'
     | '/_authenticated/profile'
+    | '/api/grade'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -136,6 +148,7 @@ export interface RootRouteChildren {
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   LoginRoute: typeof LoginRoute
   RegisterRoute: typeof RegisterRoute
+  ApiGradeRoute: typeof ApiGradeRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -203,6 +216,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedProfileRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/api/grade': {
+      id: '/api/grade'
+      path: '/api/grade'
+      fullPath: '/api/grade'
+      preLoaderRoute: typeof ApiGradeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -230,6 +250,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   LoginRoute: LoginRoute,
   RegisterRoute: RegisterRoute,
+  ApiGradeRoute: ApiGradeRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

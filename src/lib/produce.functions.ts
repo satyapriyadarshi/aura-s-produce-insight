@@ -37,7 +37,7 @@ Reply with ONLY a JSON object:
 
 export const analyzeProduceImage = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => AnalyzeInput.parse(data))
+  .validator((data: unknown) => AnalyzeInput.parse(data))
   .handler(async ({ data }): Promise<ProduceAssessment> => {
     const apiKey = process.env["LOVABLE_API_KEY"];
     if (!apiKey) throw new Error("AI is not configured for this app yet.");

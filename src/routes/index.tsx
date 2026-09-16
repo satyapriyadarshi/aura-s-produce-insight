@@ -8,7 +8,10 @@ import {
   Sparkles,
   Upload,
   Zap,
+  X,
 } from "lucide-react";
+import { useRef, useState } from "react";
+import { toast } from "sonner";
 
 import heroImage from "@/assets/hero-farmer.jpg";
 import { AurafLogo } from "@/components/auraf-logo";
@@ -72,7 +75,89 @@ const BENEFITS = [
   },
 ];
 
+function isGrade(value: string): value is Grade {
+  return value === "A+" || value === "A" || value === "B" || value === "C";
+}
+
 function Landing() {
+  const uploadInputRef = useRef<HTMLInputElement>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
+  const [selectedImage, setSelectedImage] = useState<string>("");
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [sending, setSending] = useState(false);
+  const [grade, setGrade] = useState<Grade | null>(null);
+
+  function handleImageSelected(file: File | undefined) {
+    if (!file) return;
+    if (!["image/jpeg", "image/png"].includes(file.type)) {
+      toast.error("Please choose a JPG or PNG image.");
+      return;
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error("The image must be smaller than 10 MB.");
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result === "string") {
+        setSelectedFile(file);
+        setSelectedImage(reader.result);
+      }
+    };
+    reader.onerror = () => toast.error("The image could not be read. Please try again.");
+    reader.readAsDataURL(file);
+  }
+
+  async function sendImageForGrade() {
+    if (!selectedFile) {
+      uploadInputRef.current?.click();
+      return;
+    }
+
+    setSending(true);
+    setGrade(null);
+    try {
+      const formData = new FormData();
+      formData.append("file", selectedFile, selectedFile.name);
+
+      const response = await fetch("/api/grade", {
+        method: "POST",
+        body: formData,
+      });
+
+      const payload = (await response.json().catch(() => null)) as {
+        error?: string;
+        grade?: string;
+      } | null;
+      if (!response.ok) {
+        throw new Error(payload?.error ?? "The grading service could not accept the image.");
+      }
+
+      if (!payload?.grade || !isGrade(payload.grade)) {
+        throw new Error("The grading service returned an invalid grade.");
+      }
+
+      setGrade(payload.grade);
+      toast.success(`Your produce grade is ${payload.grade}.`);
+    } catch (caught) {
+      const message =
+        caught instanceof Error ? caught.message : "The image could not be sent. Please try again.";
+      console.error("Grade webhook request failed:", caught);
+      toast.error(message);
+    } finally {
+      setSending(false);
+    }
+  }
+
+  function clearSelectedImage() {
+    setSelectedFile(null);
+    setSelectedImage("");
+    setGrade(null);
+    if (uploadInputRef.current) uploadInputRef.current.value = "";
+    if (cameraInputRef.current) cameraInputRef.current.value = "";
+  }
+
   return (
     <div className="bg-hero-wash min-h-screen">
       <header className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-4 sm:px-6">
@@ -100,18 +185,77 @@ function Landing() {
             seconds.
           </p>
           <div className="mt-7 flex flex-col gap-3 sm:flex-row">
-            <Button asChild size="lg" className="h-13 rounded-full px-7 text-base">
-              <Link to="/register">Analyze Your Produce</Link>
-            </Button>
             <Button
-              asChild
+              type="button"
+              size="lg"
+              className="h-13 rounded-full px-7 text-base"
+              onClick={() => uploadInputRef.current?.click()}
+            >
+              <Upload className="h-5 w-5" /> Upload an image
+            </Button>
+            <input
+              ref={uploadInputRef}
+              type="file"
+              accept="image/jpeg,image/png"
+              className="sr-only"
+              onChange={(event) => handleImageSelected(event.target.files?.[0])}
+            />
+            <Button
+              type="button"
               size="lg"
               variant="outline"
               className="h-13 rounded-full bg-card px-7 text-base"
+              onClick={() => cameraInputRef.current?.click()}
             >
-              <a href="#how-it-works">Learn How It Works</a>
+              <Camera className="h-5 w-5" /> Take a photo
             </Button>
+            <input
+              ref={cameraInputRef}
+              type="file"
+              accept="image/*"
+              capture="environment"
+              className="sr-only"
+              onChange={(event) => handleImageSelected(event.target.files?.[0])}
+            />
           </div>
+          {selectedImage ? (
+            <div className="surface-card mt-5 flex max-w-xl items-center gap-3 p-3">
+              <img
+                src={selectedImage}
+                alt="Selected produce preview"
+                className="h-16 w-16 rounded-xl object-cover"
+              />
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-semibold">
+                  {grade ? "Your produce grade" : "Image ready for grading"}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  {grade
+                    ? "Based on the image you submitted."
+                    : "Your image will be securely sent for grading."}
+                </p>
+              </div>
+              {grade ? <GradeBadge grade={grade} /> : null}
+              <Button
+                type="button"
+                size="sm"
+                className="rounded-full"
+                onClick={sendImageForGrade}
+                disabled={sending}
+              >
+                {sending ? "Sending..." : "Get your grade"}
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                aria-label="Remove selected image"
+                onClick={clearSelectedImage}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+          ) : null}
           <ul className="mt-7 flex flex-wrap gap-x-5 gap-y-2 text-sm text-muted-foreground">
             {["Works on any phone", "Multiple photos at once", "Free to start"].map((item) => (
               <li key={item} className="inline-flex items-center gap-1.5">
@@ -147,13 +291,43 @@ function Landing() {
           Three simple steps. No technical knowledge needed.
         </p>
         <div className="mt-8 grid gap-5 sm:grid-cols-3">
-          {STEPS.map((step) => (
+          {STEPS.map((step, index) => (
             <article key={step.title} className="surface-card p-6">
               <span className="grid h-11 w-11 place-items-center rounded-xl bg-primary-soft text-primary">
                 <step.icon className="h-5 w-5" />
               </span>
               <h3 className="mt-4 text-lg font-semibold">{step.title}</h3>
               <p className="mt-1.5 text-sm text-muted-foreground">{step.text}</p>
+              {index === 0 ? (
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="mt-5 rounded-full"
+                  onClick={() => cameraInputRef.current?.click()}
+                >
+                  <Camera className="h-4 w-4" /> Take a photo
+                </Button>
+              ) : null}
+              {index === 1 ? (
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="mt-5 rounded-full"
+                  onClick={() => uploadInputRef.current?.click()}
+                >
+                  <Upload className="h-4 w-4" /> Upload images
+                </Button>
+              ) : null}
+              {index === 2 ? (
+                <Button
+                  type="button"
+                  className="mt-5 rounded-full"
+                  onClick={selectedFile ? sendImageForGrade : () => uploadInputRef.current?.click()}
+                  disabled={sending}
+                >
+                  <Sparkles className="h-4 w-4" /> {sending ? "Sending..." : "Get your grade"}
+                </Button>
+              ) : null}
             </article>
           ))}
         </div>

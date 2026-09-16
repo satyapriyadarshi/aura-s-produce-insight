@@ -10,9 +10,6 @@ import { supabase } from "@/integrations/supabase/client";
 const LINKS = [
   { to: "/dashboard", label: "Dashboard" },
   { to: "/analyze", label: "Analyze Produce" },
-  { to: "/history", label: "History" },
-  { to: "/marketplace", label: "Marketplace" },
-  { to: "/profile", label: "Profile" },
 ] as const;
 
 export function AppNav() {
